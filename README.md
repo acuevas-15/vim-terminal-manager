@@ -8,5 +8,5 @@ If you call T from a new tab, your new tab will get its own new terminal.
 
 ## Example usage:
 ```
-T ls -l
+:T ls -l
 ```
