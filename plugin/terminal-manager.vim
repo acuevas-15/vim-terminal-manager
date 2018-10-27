@@ -16,9 +16,11 @@ function! CreateTabTerminalSP() abort
 
     execute "sp"
     redraw
+    execute "normal! \<c-w>j"
     execute "terminal"
     normal G
     let t:tab_terminal_number = buffer_number('%')
+    execute "normal! \<c-w>k"
 
     execute "normal! " . bufwinnr(current_buffer) . "\<c-w>\<c-w>"
     return t:tab_terminal_number
