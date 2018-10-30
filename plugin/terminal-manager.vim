@@ -1,25 +1,30 @@
-command! -nargs=+ T :call InsertLineInTabTerminal(<q-args>)
-command! -nargs=+ Tv :call InsertLineInVerticalTabTerminal(<q-args>)
+command! -nargs=+ T :call InsertLineInTabTerminal(0, <q-args>)
+command! -nargs=+ Tv :call InsertLineInTabTerminal(1, <q-args>)
+command! -nargs=+ At :call CreateAdHocTabTerminalSP(0, <q-args>)
+command! -nargs=+ Atv :call CreateAdHocTabTerminalSP(1, <q-args>)
 
-function! InsertLineInTabTerminal(line) abort
+function! InsertLineInTabTerminal(is_vertical, line) abort
     if !exists("t:tab_terminal_number") || bufwinnr(t:tab_terminal_number) == -1
-        let t:tab_terminal_number = CreateTabTerminalSP(0)
+        let t:tab_terminal_number = CreateInteractiveTabTerminalSP(a:is_vertical)
     endif
     call InsertLineInTerminal(t:tab_terminal_number, a:line)
 endfunction
 
-function! InsertLineInVerticalTabTerminal(line) abort
-    if !exists("t:tab_terminal_number") || bufwinnr(t:tab_terminal_number) == -1
-        let t:tab_terminal_number = CreateTabTerminalSP(1)
-    endif
-    call InsertLineInTerminal(t:tab_terminal_number, a:line)
-endfunction
-
-function! CreateTabTerminalSP(is_vertical) abort
+function! CreateInteractiveTabTerminalSP(is_vertical) abort
     if exists("t:tab_terminal_number") && bufwinnr(t:tab_terminal_number) != -1
-        echom "CreateTabTerminalSP: A terminal is already bound to this tab.  Terminal: " . t:tab_terminal_number
+        echom "CreateInteractiveTabTerminalSP: A terminal is already bound to this tab.  Terminal: " . t:tab_terminal_number
         return
     endif
+
+    return CreateTabTerminalSP(a:is_vertical, '')
+endfunction
+
+function! CreateAdHocTabTerminalSP(is_vertical, line) abort
+    let new_buffer_number = CreateTabTerminalSP(a:is_vertical, a:line)
+    call InsertLineInTerminal(new_buffer_number, a:line)
+endfunction
+
+function! CreateTabTerminalSP(is_vertical, line) abort
     let current_buffer = buffer_number('%')
 
     if !a:is_vertical
@@ -32,9 +37,9 @@ function! CreateTabTerminalSP(is_vertical) abort
         execute "normal! \<c-w>l"
     endif
 
-    execute "terminal"
+    execute "terminal " . a:line
     normal G
-    let t:tab_terminal_number = buffer_number('%')
+    let terminal_buffer = buffer_number('%')
 
     if !a:is_vertical
         execute "normal! \<c-w>k"
@@ -42,13 +47,10 @@ function! CreateTabTerminalSP(is_vertical) abort
         execute "normal! \<c-w>h"
     end
     execute "normal! " . bufwinnr(current_buffer) . "\<c-w>\<c-w>"
-    return t:tab_terminal_number
+    return terminal_buffer
 endfunction
 
 function! InsertLineInTerminal(buffer_number, line) abort
-    if bufwinnr(a:buffer_number) == -1
-        call CreateTabTerminalSP()
-    endif
     let current_buffer = buffer_number('%')
     let current_position = Mark()
 
